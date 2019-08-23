@@ -1,0 +1,9 @@
+[submodule "external/betaflight"]
+	path = external/betaflight
+	url = https://github.com/betaflight/betaflight.git
+[submodule "external/kissnet"]
+	path = external/kissnet
+	url = https://github.com/Ybalrid/kissnet.git
+[submodule "external/fmt"]
+	path = external/fmt
+	url = https://github.com/fmtlib/fmt.git
