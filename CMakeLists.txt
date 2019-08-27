@@ -2,10 +2,16 @@ cmake_minimum_required(VERSION 3.3)
 project(KwadSimServer)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if (NOT APPLE)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T${CMAKE_SOURCE_DIR}/external/betaflight/src/main/target/SITL/pg.ld")
+endif(NOT APPLE)
+
 if (WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif (WIN32)
+
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g -O0")
 
 set(SOURCE_FILES src/main.cpp)
 

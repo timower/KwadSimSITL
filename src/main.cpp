@@ -1,3 +1,5 @@
+#include "packets.h"
+
 #include <chrono>
 #include <experimental/type_traits>
 #include <iostream>
@@ -69,126 +71,63 @@ void clearline() {
 std::tuple<kn::udp_socket, kn::udp_socket> make_sockets() {
     kn::udp_socket send_socket(kn::endpoint("127.0.0.1", 6666));
     kn::udp_socket recv_socket(kn::endpoint("127.0.0.1", 7777));
+
     recv_socket.bind();
     return {std::move(send_socket), std::move(recv_socket)};
 }
 
-template <uint32_t TypeID>
-struct GodotT {
-    uint32_t _typeId = TypeID;
+std::string string_to_hex(const std::string& input) {
+    static const char* const lut = "0123456789ABCDEF";
+    size_t len = input.length();
 
-    bool check() const {
-        return _typeId == TypeID;
+    std::string output;
+    output.reserve(2 * len);
+    for (size_t i = 0; i < len; ++i) {
+        if (i % 4 == 0) output.push_back(' ');
+        const unsigned char c = input[i];
+        output.push_back(lut[c >> 4]);
+        output.push_back(lut[c & 15]);
     }
-};
-
-struct BoolT : public GodotT<1> {
-    int value;
-
-    BoolT(bool v) : value(v) {
-    }
-
-    operator bool() const {
-        return value;
-    }
-};
-
-struct FloatT : GodotT<3> {
-    float value;
-};
-
-static_assert(sizeof(FloatT) == 4 + 4);
-
-struct Vec3T : GodotT<7> {
-    float x;
-    float y;
-    float z;
-};
-
-static_assert(sizeof(Vec3T) == 16);
-
-template <typename T, uint32_t Size>
-struct ArrayT : GodotT<19> {
-    uint32_t _len;
-    std::array<T, Size> elems;
-
-    bool check() const {
-        if (!GodotT<19>::check() || Size != size()) return false;
-        for (auto& elem : elems) {
-            if (!elem.check()) return false;
-        }
-    }
-
-    uint32_t size() {
-        return _len & 0x7FFFFFFF;
-    }
-};
-
-struct InitPacket : GodotT<19> {
-    FloatT Kv, R, I0;
-    FloatT Rpm, a, torqueF, inertia;
-
-    ArrayT<FloatT, 3> thrustVels;
-
-    Vec3T dragArea;
-    FloatT dragC;
-    FloatT Vbat;
-
-    bool check() const {
-        return GodotT<19>::check() && kv.check() && R.check() && I0.check;
-    }
-};
-
-struct StatePacket : GodotT<19> {
-    FloatT delta;
-    Vec3T position;
-    std::array<Vec3T, 3> rotation;
-
-    Vec3T linear_velocity;
-    Vec3T angular_velocity;
-
-    std::array<FloatT, 8> rcData;
-    BoolT crashed;
-};
-
-struct StateUpdatePacket {
-    Vec3T linear_velocity;
-    Vec3T angular_velocity;
-
-    static StateUpdatePacket fromState(const StatePacket& state) {
-        return {state.linear_velocity, state.angular_velocity};
-    }
-};
-
-static const auto INIT_PACKET_SIZE = 109;
+    return output;
+}
 
 template <typename T>
-T get(std::byte*& cur) {
-    T ret = *reinterpret_cast<T*>(cur);
+T get(std::byte* cur, std::size_t len) {
+    auto result = parse<T>(cur, len);
+    assert(result);
+    assert(len == 0);
 
-    ret.check();
-
-    std::advance(cur, sizeof(T));
-    return ret;
+    return *result;
 }
 
 const InitPacket getInitPacket(kn::udp_socket& recv_socket) {
     std::array<std::byte, 1024> buf;
-    auto [len, error] = recv_socket.recv(buf);
-    assert(!error);
-    assert(len == INIT_PACKET_SIZE);
-    InitPacket packet;
-    auto cur = buf.begin();
+    auto [len, no_error] = recv_socket.recv(buf);
 
-    auto typeId = get<uint32_t>(cur);
-    assert(typeId == 19);  // array
-    packet.delta = get<FloatT>(cur);
+    // std::string str(reinterpret_cast<const char*>(&buf[0]), len);
+    // fmt::print("Got: {}\n", string_to_hex(str));
 
-    return packet;
+    assert(no_error);
+
+    return get<InitPacket>(&buf[0], len);
 }
-const StatePacket getStatePacket(kn::udp_socket& recv_socket);
+const StatePacket getStatePacket(kn::udp_socket& recv_socket) {
+    std::array<std::byte, 1024> buf;
+    auto [len, no_error] = recv_socket.recv(buf);
+
+    // std::string str(reinterpret_cast<const char*>(&buf[0]), len);
+    // fmt::print("Got: {}\n", string_to_hex(str));
+
+    assert(no_error);
+
+    return get<StatePacket>(&buf[0], len);
+}
+
 void sendStateUpdatePacket(kn::udp_socket& send_socket,
-                           const StateUpdatePacket& update);
+                           const StateUpdatePacket& update) {
+    send_socket.send(reinterpret_cast<const std::byte*>(&update),
+                     sizeof(StateUpdatePacket));
+}
 
 int main() {
     auto last = hr_clock::now();
@@ -212,7 +151,7 @@ int main() {
         const auto state = getStatePacket(recv_socket);
         auto update = StateUpdatePacket::fromState(state);
 
-        const auto deltaMicros = int(state.delta * 1e6);
+        const auto deltaMicros = int(state.delta() * 1e6);
         totalDelta += deltaMicros;
 
         const auto last = hr_clock::now();
