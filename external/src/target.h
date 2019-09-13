@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "common/utils.h"
 
@@ -41,17 +41,17 @@
 // file name to save config
 #define EEPROM_FILENAME "eeprom.bin"
 #define EEPROM_IN_RAM
-#define EEPROM_SIZE     32768
+#define EEPROM_SIZE 32768
 
 #define U_ID_0 0
 #define U_ID_1 1
 #define U_ID_2 2
 
 #undef TASK_GYROPID_DESIRED_PERIOD
-#define TASK_GYROPID_DESIRED_PERIOD     100
+#define TASK_GYROPID_DESIRED_PERIOD 100
 
 #undef SCHEDULER_DELAY_LIMIT
-#define SCHEDULER_DELAY_LIMIT           1
+#define SCHEDULER_DELAY_LIMIT 1
 
 #define USE_FAKE_LED
 
@@ -87,15 +87,14 @@
 
 #define SERIAL_PORT_COUNT 8
 
-#define DEFAULT_RX_FEATURE      FEATURE_RX_MSP
+#define DEFAULT_RX_FEATURE FEATURE_RX_MSP
 #define DEFAULT_FEATURES (FEATURE_GPS | FEATURE_TELEMETRY | FEATURE_OSD)
 
 #define USE_PARAMETER_GROUPS
 
-
 #define USE_MAX7456
 
-#undef STACK_CHECK // I think SITL don't need this
+#undef STACK_CHECK  // I think SITL don't need this
 #undef USE_DASHBOARD
 #undef USE_TELEMETRY_LTM
 #undef USE_ADC
@@ -134,18 +133,16 @@
 #undef USE_SERIAL_4WAY_BLHELI_BOOTLOADER
 #undef USE_SERIAL_4WAY_SK_BOOTLOADER
 
-
 #undef USE_I2C
 #undef USE_SPI
 
 #define FLASH_SIZE 2048
 
-
 #define LED_STRIP_TIMER 1
 #define SOFTSERIAL_1_TIMER 2
 #define SOFTSERIAL_2_TIMER 3
 
-#define DEFIO_NO_PORTS   // suppress 'no pins defined' warning
+#define DEFIO_NO_PORTS  // suppress 'no pins defined' warning
 
 // belows are internal stuff
 
@@ -156,65 +153,57 @@ extern uint8_t eepromData[EEPROM_SIZE];
 #define __config_start (*eepromData)
 #define __config_end (*ARRAYEND(eepromData))
 #else
-extern uint8_t __config_start;   // configured via linker script when building binaries.
+extern uint8_t
+    __config_start;  // configured via linker script when building binaries.
 extern uint8_t __config_end;
 #endif
 
-typedef enum
-{
-    Mode_TEST = 0x0,
-    Mode_Out_PP = 0x10
-} GPIO_Mode;
+typedef enum { Mode_TEST = 0x0, Mode_Out_PP = 0x10 } GPIO_Mode;
 
-typedef enum {RESET = 0, SET = !RESET} FlagStatus, ITStatus;
-typedef enum {DISABLE = 0, ENABLE = !DISABLE} FunctionalState;
-typedef enum {TEST_IRQ = 0 } IRQn_Type;
+typedef enum { RESET = 0, SET = !RESET } FlagStatus, ITStatus;
+typedef enum { DISABLE = 0, ENABLE = !DISABLE } FunctionalState;
+typedef enum { TEST_IRQ = 0 } IRQn_Type;
 typedef enum {
     EXTI_Trigger_Rising = 0x08,
     EXTI_Trigger_Falling = 0x0C,
     EXTI_Trigger_Rising_Falling = 0x10
 } EXTITrigger_TypeDef;
 
-typedef struct
-{
-  uint32_t IDR;
-  uint32_t ODR;
-  uint32_t BSRR;
-  uint32_t BRR;
+typedef struct {
+    uint32_t IDR;
+    uint32_t ODR;
+    uint32_t BSRR;
+    uint32_t BRR;
 } GPIO_TypeDef;
 
 #define GPIOA_BASE ((intptr_t)0x0001)
 
-typedef struct
-{
-    void* test;
+typedef struct {
+    void *test;
 } TIM_TypeDef;
 
-typedef struct
-{
-    void* test;
+typedef struct {
+    void *test;
 } TIM_OCInitTypeDef;
 
 typedef struct {
-    void* test;
+    void *test;
 } DMA_TypeDef;
 
 typedef struct {
-    void* test;
+    void *test;
 } DMA_Channel_TypeDef;
 
 uint8_t DMA_GetFlagStatus(void *);
-void DMA_Cmd(DMA_Channel_TypeDef*, FunctionalState );
+void DMA_Cmd(DMA_Channel_TypeDef *, FunctionalState);
 void DMA_ClearFlag(uint32_t);
 
-typedef struct
-{
-    void* test;
+typedef struct {
+    void *test;
 } SPI_TypeDef;
 
-typedef struct
-{
-    void* test;
+typedef struct {
+    void *test;
 } USART_TypeDef;
 
 #define USART1 ((USART_TypeDef *)0x0001)
@@ -231,25 +220,22 @@ typedef struct
 #define UART7 ((USART_TypeDef *)0x0007)
 #define UART8 ((USART_TypeDef *)0x0008)
 
-typedef struct
-{
-    void* test;
+typedef struct {
+    void *test;
 } I2C_TypeDef;
 
-typedef enum
-{
-  FLASH_BUSY = 1,
-  FLASH_ERROR_PG,
-  FLASH_ERROR_WRP,
-  FLASH_COMPLETE,
-  FLASH_TIMEOUT
+typedef enum {
+    FLASH_BUSY = 1,
+    FLASH_ERROR_PG,
+    FLASH_ERROR_WRP,
+    FLASH_COMPLETE,
+    FLASH_TIMEOUT
 } FLASH_Status;
 
 void FLASH_Unlock(void);
 void FLASH_Lock(void);
 FLASH_Status FLASH_ErasePage(uintptr_t Page_Address);
 FLASH_Status FLASH_ProgramWord(uintptr_t addr, uint32_t Data);
-
 
 int lockMainPID(void);
 

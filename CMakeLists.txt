@@ -11,9 +11,9 @@ if (WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif (WIN32)
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g -O0")
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g -O0 -fprofile-arcs -ftest-coverage")
 
-set(SOURCE_FILES src/main.cpp)
+set(SOURCE_FILES src/main.cpp src/packets.cpp src/simulator.cpp)
 
 set(BETAFLIGHT_SOURCES
     "build/build_config.c"
