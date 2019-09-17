@@ -29,8 +29,9 @@
 
 #include "common/maths.h"
 
-#include "drivers/dma.h"
 #include "drivers/io.h"
+
+#include "drivers/dma.h"
 #include "drivers/light_led.h"
 #include "drivers/pwm_output.h"
 #include "drivers/serial.h"
