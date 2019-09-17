@@ -1,0 +1,41 @@
+PACKET(InitPacket, 14)
+    FIELD(FloatT, motor_kv)
+    FIELD(FloatT, motor_R)
+    FIELD(FloatT, motor_I0)
+
+    FIELD(FloatT, prop_max_rpm)
+    FIELD(FloatT, prop_a_factor)
+    FIELD(FloatT, prop_torque_factor)
+    FIELD(FloatT, prop_inertia)
+    FIELD(S(ArrayT<FloatT, 3>), prop_thrust_factors)
+
+    FIELD(Vec3T, frame_drag_area)
+    FIELD(FloatT, frame_drag_constant)
+
+    FIELD(FloatT, quad_mass)
+    FIELD(Vec3T, quad_inv_inertia)
+    FIELD(FloatT, quad_vbat)
+    FIELD(S(ArrayT<Vec3T, 4>), quad_motor_pos)
+END_PACKET()
+
+PACKET(StatePacket, 7)
+    FIELD(FloatT, delta)
+    FIELD(Vec3T, position)
+    FIELD(BasisT, rotation)
+
+    FIELD(Vec3T, angularVelocity)
+    FIELD(Vec3T, linearVelocity)
+    FIELD(S(ArrayT<FloatT, 8>), rcData)
+    FIELD(BoolT, crashed)
+END_PACKET()
+
+PACKET(StateUpdatePacket, 2)
+    FIELD(Vec3T, angularVelocity)
+    FIELD(Vec3T, linearVelocity)
+END_PACKET()
+
+PACKET(StateOsdUpdatePacket, 3)
+    FIELD(Vec3T, angularVelocity)
+    FIELD(Vec3T, linearVelocity)
+    FIELD(S(PoolByteArrayT<16 * 30>), osd)
+END_PACKET()

@@ -62,14 +62,14 @@ const auto DELTA = 1e6 / FREQUENCY;
 void Simulator::set_gyro(const StatePacket& state,
                          const vmath::vec3& acceleration) {
     using namespace vmath;
-    mat3 basis = state.rotation();
+    mat3 basis = state.rotation.value;
 
-    vec3 pos = state.position();
+    vec3 pos = state.position.value;
     quat rotation = mat3_to_quat(basis);
-    vec3 gyro = xform_inv(basis, state.angularVelocity());
+    vec3 gyro = xform_inv(basis, state.angularVelocity.value);
 
     vec3 accelerometer =
-        xform_inv(basis, acceleration) / init_packet.quad_mass();
+        xform_inv(basis, acceleration) / init_packet.quad_mass.value;
 
     int16_t x, y, z;
     if (bf::sensors(bf::SENSOR_ACC)) {
@@ -119,7 +119,8 @@ void Simulator::set_gyro(const StatePacket& state,
                  DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS)) +
             43551050;
         bf::gpsSol.llh.altCm = int32_t(pos[1] * 100);
-        bf::gpsSol.groundSpeed = uint16_t(length(state.linearVelocity()) * 100);
+        bf::gpsSol.groundSpeed =
+            uint16_t(length(state.linearVelocity.value) * 100);
         bf::GPS_update |= bf::GPS_MSP_UPDATE;
 
         last_millis = millis;
@@ -128,23 +129,23 @@ void Simulator::set_gyro(const StatePacket& state,
 
 float Simulator::motor_torque(float volts, float rpm) {
     auto current =
-        (volts - rpm / init_packet.motor_kv()) / init_packet.motor_R();
+        (volts - rpm / init_packet.motor_kv.value) / init_packet.motor_R.value;
 
     if (current > 0)
-        current = std::max(0.0f, current - init_packet.motor_I0());
+        current = std::max(0.0f, current - init_packet.motor_I0.value);
     else if (current < 0)
-        current = std::min(0.0f, current + init_packet.motor_I0());
-    return current * 60 / (init_packet.motor_kv() * 2.0f * float(M_PI));
+        current = std::min(0.0f, current + init_packet.motor_I0.value);
+    return current * 60 / (init_packet.motor_kv.value * 2.0f * float(M_PI));
 }
 
 float Simulator::prop_thrust(float rpm, float vel) {
     using namespace vmath;
     // max thrust vs velocity:
-    auto propF = init_packet.prop_thrust_factors()[0].value * vel * vel +
-                 init_packet.prop_thrust_factors()[1].value * vel +
-                 init_packet.prop_thrust_factors()[2].value;
-    const auto max_rpm = init_packet.prop_max_rpm();
-    const auto prop_a = init_packet.prop_a_factor();
+    auto propF = init_packet.prop_thrust_factors.value[0].value * vel * vel +
+                 init_packet.prop_thrust_factors.value[1].value * vel +
+                 init_packet.prop_thrust_factors.value[2].value;
+    const auto max_rpm = init_packet.prop_max_rpm.value;
+    const auto prop_a = init_packet.prop_a_factor.value;
     propF = std::max(0.0f, propF);
 
     // thrust vs rpm (and max thrust)
@@ -155,7 +156,7 @@ float Simulator::prop_thrust(float rpm, float vel) {
 }
 
 float Simulator::prop_torque(float rpm, float vel) {
-    return prop_thrust(rpm, vel) * init_packet.prop_torque_factor();
+    return prop_thrust(rpm, vel) * init_packet.prop_torque_factor.value;
 }
 
 float Simulator::calculate_motors(float dt, const StatePacket& state,
@@ -166,25 +167,26 @@ float Simulator::calculate_motors(float dt, const StatePacket& state,
 
     float resPropTorque = 0;
 
-    const auto up = get_axis(state.rotation(), 1);
+    const auto up = get_axis(state.rotation.value, 1);
 
     for (int i = 0; i < 4; i++) {
-        // const auto r = xform(state.rotation(), motors[i].position);
-        const auto linVel = state.linearVelocity();
+        // const auto r = xform(state.rotation.value, motors[i].position);
+        const auto linVel = state.linearVelocity.value;
         const auto vel = std::max(0.0f, dot(linVel, up));
 
         auto rpm = motors[i].rpm;
 
-        const auto volts = bf::motorsPwm[i] / 1000.0f * init_packet.quad_vbat();
+        const auto volts =
+            bf::motorsPwm[i] / 1000.0f * init_packet.quad_vbat.value;
         const auto torque = motor_torque(volts, rpm);
 
         const auto ptorque = prop_torque(rpm, vel);
         const auto net_torque = torque - ptorque;
-        const auto domega = net_torque / init_packet.prop_inertia();
+        const auto domega = net_torque / init_packet.prop_inertia.value;
         const auto drpm = (domega * dt) * 60.0f / (2.0f * float(M_PI));
 
-        const auto kv = init_packet.motor_kv();
-        const auto maxdrpm = fabsf(volts * init_packet.motor_kv() - rpm);
+        const auto kv = init_packet.motor_kv.value;
+        const auto maxdrpm = fabsf(volts * init_packet.motor_kv.value - rpm);
         rpm += clamp(drpm, -maxdrpm, maxdrpm);
 
         motors[i].thrust = prop_thrust(rpm, vel);
@@ -197,10 +199,10 @@ float Simulator::calculate_motors(float dt, const StatePacket& state,
 
 void Simulator::update_rotation(float dt, StatePacket& state) {
     using namespace vmath;
-    const auto w = state.angularVelocity() * dt;
+    const auto w = state.angularVelocity.value * dt;
     const mat3 W = {vec3{1, -w[2], w[1]}, vec3{w[2], 1, -w[0]},
                     vec3{-w[1], w[0], 1}};
-    state.rotation() = W * state.rotation();
+    state.rotation.value = W * state.rotation.value;
 }
 
 vmath::vec3 Simulator::calculate_physics(
@@ -209,47 +211,49 @@ vmath::vec3 Simulator::calculate_physics(
     using namespace vmath;
     vec3 acceleration;
 
-    auto gravity_force = vec3{0, -9.81f * init_packet.quad_mass(), 0};
+    auto gravity_force = vec3{0, -9.81f * init_packet.quad_mass.value, 0};
 
     // force sum:
     vec3 total_force = gravity_force;
 
     // drag:
-    float vel2 = length2(state.linearVelocity());
-    auto dir = normalize(state.linearVelocity());
-    auto local_dir = xform_inv(state.rotation(), dir);
-    float area = dot(init_packet.frame_drag_area(), abs(local_dir));
+    float vel2 = length2(state.linearVelocity.value);
+    auto dir = normalize(state.linearVelocity.value);
+    auto local_dir = xform_inv(state.rotation.value, dir);
+    float area = dot(init_packet.frame_drag_area.value, abs(local_dir));
     total_force = total_force - dir * 0.5 * AIR_RHO * vel2 *
-                                    init_packet.frame_drag_constant() * area;
+                                    init_packet.frame_drag_constant.value *
+                                    area;
 
     // motors:
     for (auto i = 0u; i < 4; i++) {
-        total_force =
-            total_force + xform(state.rotation(), vec3{0, motors[i].thrust, 0});
+        total_force = total_force +
+                      xform(state.rotation.value, vec3{0, motors[i].thrust, 0});
     }
 
-    acceleration = total_force / init_packet.quad_mass();
-    state.linearVelocity() = state.linearVelocity() + acceleration * dt;
+    acceleration = total_force / init_packet.quad_mass.value;
+    state.linearVelocity.value = state.linearVelocity.value + acceleration * dt;
 
-    assert(std::isfinite(length(state.linearVelocity())));
+    assert(std::isfinite(length(state.linearVelocity.value)));
 
     // moment sum around origin:
-    vec3 total_moment = get_axis(state.rotation(), 1) * motorsTorque;
+    vec3 total_moment = get_axis(state.rotation.value, 1) * motorsTorque;
 
     for (auto i = 0u; i < 4; i++) {
-        auto force = xform(state.rotation(), {0, motors[i].thrust, 0});
-        auto rad = xform(state.rotation(), motors[i].position);
+        auto force = xform(state.rotation.value, {0, motors[i].thrust, 0});
+        auto rad = xform(state.rotation.value, motors[i].position);
         total_moment = total_moment + cross(rad, force);
     }
 
-    vec3 inv_inertia = init_packet.quad_inv_inertia();
+    vec3 inv_inertia = init_packet.quad_inv_inertia.value;
     mat3 inv_tensor = {vec3{inv_inertia[0], 0, 0}, vec3{0, inv_inertia[1], 0},
                        vec3{0, 0, inv_inertia[2]}};
-    inv_tensor = state.rotation() * inv_tensor * transpose(state.rotation());
+    inv_tensor =
+        state.rotation.value * inv_tensor * transpose(state.rotation.value);
     vec3 angularAcc = xform(inv_tensor, total_moment);
     assert(std::isfinite(angularAcc[0]) && std::isfinite(angularAcc[1]) &&
            std::isfinite(angularAcc[2]));
-    state.angularVelocity() = state.angularVelocity() + angularAcc * dt;
+    state.angularVelocity.value = state.angularVelocity.value + angularAcc * dt;
 
     update_rotation(dt, state);
 
@@ -283,10 +287,10 @@ Simulator::~Simulator() {
 void Simulator::connect() {
     fmt::print("Waiting for init packet\n");
 
-    init_packet = getInitPacket(recv_socket);
+    init_packet = receive<InitPacket>(recv_socket);
 
     for (auto i = 0u; i < 4; i++) {
-        motorsState[i].position = init_packet.quad_motor_pos()[i].value;
+        motorsState[i].position = init_packet.quad_motor_pos.value[i].value;
     }
 
     fmt::print("Initializing dyad\n");
@@ -303,13 +307,13 @@ void Simulator::connect() {
 }
 
 bool Simulator::step() {
-    auto stateOrStop = getStatePacket(recv_socket);
+    auto stateOrStop = receive<StatePacket, true>(recv_socket);
     if (!stateOrStop) {
         return false;
     }
     auto state = *stateOrStop;
 
-    const auto deltaMicros = int(state.delta() * 1e6);
+    const auto deltaMicros = int(state.delta.value * 1e6);
     total_delta += deltaMicros;
 
     // const auto last = hr_clock::now();
@@ -320,7 +324,7 @@ bool Simulator::step() {
     // long long dyad_time_i = to_us(dyad_time);
 
     // update rc at 100Hz, otherwise rx loss gets reported:
-    set_rc_data(state.rcData());
+    set_rc_data(state.rcData.value);
 
     for (auto k = 0u; total_delta - DELTA > 0; k++) {
         total_delta -= DELTA;
@@ -336,7 +340,7 @@ bool Simulator::step() {
             bf::scheduler();
         }
 
-        if (state.crashed()) continue;
+        if (state.crashed.value) continue;
 
         float motorsTorque = calculate_motors(dt, state, motorsState);
 
@@ -345,11 +349,19 @@ bool Simulator::step() {
 
     if (micros_passed - last_osd_time > OSD_UPDATE_TIME) {
         last_osd_time = micros_passed;
-        auto update = StateOsdUpdatePacket::fromState(state);
-        update.copyScreenData(bf::osdScreen);
+        StateOsdUpdatePacket update;
+        update.angularVelocity.value = state.angularVelocity.value;
+        update.linearVelocity.value = state.linearVelocity.value;
+        for (int y = 0; y < VIDEO_LINES; y++) {
+            for (int x = 0; x < CHARS_PER_LINE; x++) {
+                update.osd.value[y * CHARS_PER_LINE + x] = bf::osdScreen[y][x];
+            }
+        }
         send(send_socket, update);
     } else {
-        const auto update = StateUpdatePacket::fromState(state);
+        StateUpdatePacket update;
+        update.angularVelocity.value = state.angularVelocity.value;
+        update.linearVelocity.value = state.linearVelocity.value;
         send(send_socket, update);
     }
 
