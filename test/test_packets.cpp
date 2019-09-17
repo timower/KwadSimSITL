@@ -6,8 +6,8 @@
 namespace kn = kissnet;
 
 std::pair<kn::udp_socket, kn::udp_socket> createSockets() {
-    kn::udp_socket send_socket(kn::endpoint("127.0.0.1", 7777));
-    kn::udp_socket recv_socket(kn::endpoint("127.0.0.1", 7777));
+    kn::udp_socket send_socket(kn::endpoint("localhost", 17777));
+    kn::udp_socket recv_socket(kn::endpoint("localhost", 17777));
     recv_socket.bind();
     return {std::move(send_socket), std::move(recv_socket)};
 }
