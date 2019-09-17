@@ -15,15 +15,18 @@ std::pair<kn::udp_socket, kn::udp_socket> createSockets() {
 TEST_CASE("packet stufff", "[packets]") {
     auto [send_socket, recv_socket] = createSockets();
 
-    BoolT b{.value = true};
+    BoolT b;
+    b.value = true;
     send(send_socket, b);
     REQUIRE(receive<BoolT>(recv_socket).value == b.value);
 
-    FloatT testF{.value = 12.0f};
+    FloatT testF;
+    testF.value = 12.0f;
     send(send_socket, testF);
     REQUIRE(receive<FloatT>(recv_socket).value == 12.0f);
 
-    Vec3T testV{.value = {12.0f, 0.0f, -12.2e5f}};
+    Vec3T testV;
+    testV.value = {12.0f, 0.0f, -12.2e5f};
     send(send_socket, testV);
     auto recvV = receive<Vec3T>(recv_socket).value;
     REQUIRE(recvV[0] == 12.0f);
