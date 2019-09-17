@@ -2,6 +2,8 @@ os:
   - linux
   - osx
 
+osx_image: xcode10.3
+
 sudo: false
 
 dist: bionic
