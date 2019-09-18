@@ -19,5 +19,5 @@ else
     cd build_win
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/windows.cmake ..
     cmake --build .
-    wine test/unit_tests.exe
+    wine64 test/unit_tests.exe
 fi
