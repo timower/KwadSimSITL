@@ -24,7 +24,7 @@ add_subdirectory(external/)
 set(SOURCE_FILES 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/simulator.cpp)
 
-add_library(libsim STATIC ${BETAFLIGHT_SOURCES} ${SOURCE_FILES})
+add_library(libsim OBJECT ${BETAFLIGHT_SOURCES} ${SOURCE_FILES})
 target_compile_features(libsim PUBLIC cxx_std_17)
 
 target_compile_definitions(libsim PUBLIC "__TARGET__=\"KWADSIM\"")
@@ -45,11 +45,9 @@ target_include_directories(libsim PUBLIC external/kissnet)
 target_link_libraries(libsim PUBLIC fmt-header-only)
 
 add_executable(kwadSimServer 
-    src/main.cpp) # ${SOURCE_FILES}) #${BETAFLIGHT_SOURCES}) # $<TARGET_OBJECTS:libsim>
+    src/main.cpp $<TARGET_OBJECTS:libsim>) # ${SOURCE_FILES}) #${BETAFLIGHT_SOURCES})
 
 target_link_libraries(kwadSimServer PUBLIC libsim)
-
-target_link_libraries(kwadSimServer PUBLIC fmt-header-only)
 
 if (WIN32)
     target_link_libraries(kwadSimServer PUBLIC wsock32 ws2_32)
