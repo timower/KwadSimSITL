@@ -1,5 +1,7 @@
 # KwadSimServer 
 [![Build Status](https://travis-ci.org/timower/KwadSimServer.svg?branch=master)](https://travis-ci.org/timower/KwadSimServer)
+[![codecov](https://codecov.io/gh/timower/KwadSimServer/branch/master/graph/badge.svg)](https://codecov.io/gh/timower/KwadSimServer)
+
 
 The server that is included in KwadSim.
 It hosts the betaflight process and responds to state updates from the KwadSim client.
