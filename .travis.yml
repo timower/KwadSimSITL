@@ -17,7 +17,7 @@ addons:
       - libc6-i386
       - time
       - mingw-w64
-      - scons
+      - wine
 
 git:
   depth: 5
