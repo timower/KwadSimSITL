@@ -10,6 +10,8 @@ using vec3 = std::array<float, 3>;
 using mat3 = std::array<vec3, 3>;
 using quat = std::array<float, 4>;
 
+constexpr mat3 identity = {vec3{1, 0, 0}, vec3{0, 1, 0}, vec3{0, 0, 1}};
+
 inline float dot(const vec3& v1, const vec3& v2) {
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }

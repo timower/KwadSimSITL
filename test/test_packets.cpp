@@ -5,14 +5,30 @@
 
 namespace kn = kissnet;
 
+namespace {
 std::pair<kn::udp_socket, kn::udp_socket> createSockets() {
     kn::udp_socket send_socket(kn::endpoint("localhost", 17777));
     kn::udp_socket recv_socket(kn::endpoint("localhost", 17777));
     recv_socket.bind();
     return {std::move(send_socket), std::move(recv_socket)};
 }
+}  // namespace
 
-TEST_CASE("packet stufff", "[packets]") {
+TEST_CASE("advance", "[packets]") {
+    std::array<std::byte, 5> test;
+    std::size_t len = 5;
+    auto* p = &test[0];
+
+    REQUIRE(advance(p, len, 2));
+    REQUIRE(len == 3);
+    REQUIRE(advance(p, len, 3));
+    REQUIRE_FALSE(advance(p, len, 1));
+    len = 5;
+    p = &test[0];
+    REQUIRE_FALSE(advance(p, len, 6));
+}
+
+TEST_CASE("packet send & receive", "[packets]") {
     auto [send_socket, recv_socket] = createSockets();
 
     BoolT b;

@@ -30,7 +30,6 @@ TEST_CASE("general vector math", "[vmath]") {
     REQUIRE(clamp(-0.5, 0, 1) == 0);
     REQUIRE(clamp(1.5, 0, 1) == 1);
 
-    mat3 identity = {vec3{1, 0, 0}, vec3{0, 1, 0}, vec3{0, 0, 1}};
     mat3 rotate = {vec3{0, -1, 0}, vec3{1, 0, 0}, vec3{0, 0, 1}};
 
     REQUIRE(xform(identity, a) == a);

@@ -14,16 +14,7 @@
 #include <fmt/format.h>
 #include <kissnet.hpp>
 
-namespace {
-inline bool advance(std::byte*& data, std::size_t& len, std::size_t n) {
-    if (len - n >= 0) {
-        data += n;
-        len -= n;
-        return true;
-    }
-    return false;
-}
-
+namespace detail {
 inline std::string string_to_hex(const std::string& input) {
     static const char* const lut = "0123456789ABCDEF";
     size_t len = input.length();
@@ -38,7 +29,18 @@ inline std::string string_to_hex(const std::string& input) {
     }
     return output;
 }
-}  // namespace
+}  // namespace detail
+
+[[nodiscard]] inline bool advance(std::byte*& data,
+                                  std::size_t& len,
+                                  std::size_t n) {
+    if (len >= n) {
+        data += n;
+        len -= n;
+        return true;
+    }
+    return false;
+}
 
 template <typename T>
 std::optional<T> parse(std::byte*& data, std::size_t& len) {
@@ -60,17 +62,17 @@ struct GodotT {
         if (((*tid) & 0xFFFF) != TypeID) {
             return false;
         }
-        advance(data, len, sizeof(uint32_t));
 
-        if (len < 0) {
-            return false;
-        }
-        return true;
+        return advance(data, len, sizeof(uint32_t));
     }
 };
 
 struct BoolT : public GodotT<1> {
-    uint32_t value;
+    uint32_t value = 0;
+
+    BoolT() = default;
+    BoolT(bool val) : value(val) {
+    }
 
     bool _parse(std::byte*& data, std::size_t& len) {
         if (!GodotT::_parse(data, len)) return false;
@@ -78,10 +80,18 @@ struct BoolT : public GodotT<1> {
 
         return advance(data, len, sizeof(uint32_t));
     }
+
+    operator bool() const {
+        return value;
+    }
 };
 
 struct FloatT : GodotT<3> {
-    float value;
+    float value = 0.0f;
+
+    FloatT() = default;
+    FloatT(float val) : value(val) {
+    }
 
     bool _parse(std::byte*& data, std::size_t& len) {
         const bool is64 = ((*reinterpret_cast<uint32_t*&>(data)) & 0xFFFF0000);
@@ -89,13 +99,15 @@ struct FloatT : GodotT<3> {
 
         if (!is64) {
             value = *reinterpret_cast<float*&>(data);
-            advance(data, len, sizeof(float));
-        } else {
-            value = *reinterpret_cast<double*&>(data);
-            advance(data, len, sizeof(double));
+            return advance(data, len, sizeof(float));
         }
 
-        return len >= 0;
+        value = *reinterpret_cast<double*&>(data);
+        return advance(data, len, sizeof(double));
+    }
+
+    operator float() const {
+        return value;
     }
 };
 
@@ -104,15 +116,19 @@ static_assert(sizeof(FloatT) == 4 + 4);
 struct Vec3T : public GodotT<7> {
     vmath::vec3 value;
 
+    Vec3T() = default;
+    Vec3T(const vmath::vec3& val) : value(val) {
+    }
+
     bool _parse(std::byte*& data, std::size_t& len) {
         if (!GodotT::_parse(data, len)) return false;
 
         for (auto i = 0u; i < 3; i++) {
             value[i] = *reinterpret_cast<float*&>(data);
-            advance(data, len, sizeof(float));
+            if (!advance(data, len, sizeof(float))) return false;
         }
 
-        return len >= 0;
+        return true;
     }
 };
 
@@ -127,11 +143,11 @@ struct BasisT : public GodotT<12> {
         for (auto i = 0u; i < 3; i++) {
             for (auto j = 0u; j < 3; j++) {
                 value[i][j] = *reinterpret_cast<float*&>(data);
-                advance(data, len, sizeof(float));
+                if (!advance(data, len, sizeof(float))) return false;
             }
         }
 
-        return len >= 0;
+        return true;
     }
 };
 
@@ -147,7 +163,7 @@ struct ArrayT : public GodotT<19> {
 
         _len = *reinterpret_cast<uint32_t*&>(data);
         if (_len != Size) return false;
-        advance(data, len, sizeof(uint32_t));
+        if (!advance(data, len, sizeof(uint32_t))) return false;
 
         for (auto i = 0u; i < Size; i++) {
             T v;
@@ -155,7 +171,7 @@ struct ArrayT : public GodotT<19> {
             value[i] = v;
         }
 
-        return len >= 0;
+        return true;
     }
 };
 
@@ -171,12 +187,10 @@ struct PoolByteArrayT : GodotT<20> {
 
         _len = *reinterpret_cast<uint32_t*&>(data);
         if (_len != Size) return false;
-        advance(data, len, sizeof(uint32_t));
+        if (!advance(data, len, sizeof(uint32_t))) return false;
 
         std::memcpy(&value[0], data, sizeof(uint8_t) * Size);
-        advance(data, len, sizeof(uint8_t) * Size);
-
-        return len >= 0;
+        return advance(data, len, sizeof(uint8_t) * Size);
     }
 };
 
@@ -204,13 +218,13 @@ struct PoolByteArrayT : GodotT<20> {
         if (!GodotT::_parse(data, len)) return false;              \
         _len = *reinterpret_cast<uint32_t*&>(data);                \
         if (_len != size) return false;                            \
-        advance(data, len, sizeof(uint32_t));
+        if (!advance(data, len, sizeof(uint32_t))) return false;
 
 #define FIELD(type, name) \
     if (!this->name._parse(data, len)) return false;
 
 #define END_PACKET() \
-    return len >= 0; \
+    return true;     \
     }
 
 #include "packets.def"

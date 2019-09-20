@@ -273,8 +273,8 @@ void Simulator::set_rc_data(std::array<FloatT, 8> data) {
 }
 
 Simulator::Simulator()
-    : recv_socket(kissnet::endpoint("127.0.0.1", 7777)),
-      send_socket(kissnet::endpoint("127.0.0.1", 6666)) {
+    : recv_socket(kissnet::endpoint("localhost", 7777)),
+      send_socket(kissnet::endpoint("localhost", 6666)) {
     recv_socket.bind();
 }
 
@@ -329,7 +329,7 @@ bool Simulator::step() {
     // update rc at 100Hz, otherwise rx loss gets reported:
     set_rc_data(state.rcData.value);
 
-    for (auto k = 0u; total_delta - DELTA > 0; k++) {
+    for (auto k = 0u; total_delta - DELTA >= 0; k++) {
         total_delta -= DELTA;
         micros_passed += DELTA;
         const float dt = DELTA / 1e6f;
