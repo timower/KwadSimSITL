@@ -179,8 +179,9 @@ FLASH_Status FLASH_ProgramWord(uintptr_t addr, uint32_t value) {
     if ((addr >= (uintptr_t)eepromData) &&
         (addr < (uintptr_t)ARRAYEND(eepromData))) {
         *((uint32_t *)addr) = value;
-        printf(
-          "[FLASH_ProgramWord]%p = %08x\n", (void *)addr, *((uint32_t *)addr));
+        // printf(
+        //  "[FLASH_ProgramWord]%p = %08x\n", (void *)addr, *((uint32_t
+        //  *)addr));
     } else {
         printf("[FLASH_ProgramWord]%p out of range!\n", (void *)addr);
     }

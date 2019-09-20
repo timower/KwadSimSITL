@@ -54,7 +54,7 @@ TEST_CASE("Simulator init", "[simulator]") {
     REQUIRE(receive<BoolT>(recv_socket));
 
     StatePacket state;
-    state.delta = 0.001f;
+    state.delta = 1.0f;
     state.position = vec3{0, 0, 0};
     state.rotation.value = identity;
     state.angularVelocity = vec3{0, 0, 0};
@@ -63,12 +63,15 @@ TEST_CASE("Simulator init", "[simulator]") {
     state.crashed = false;
 
     send(send_socket, state);
-    simulator.step();
+    REQUIRE(simulator.step());
 
-    REQUIRE(simulator.micros_passed == 1000);
-    auto update = receive<StateUpdatePacket>(recv_socket);
+    REQUIRE(simulator.micros_passed == 1000000);
+    auto update = receive<StateOsdUpdatePacket>(recv_socket);
     REQUIRE(update.angularVelocity.value == vec3{0, 0, 0});
     REQUIRE(update.linearVelocity.value[0] == 0);
     REQUIRE(update.linearVelocity.value[1] < 0);
     REQUIRE(update.linearVelocity.value[2] == 0);
+
+    send_socket.send(reinterpret_cast<const std::byte*>("STOP"), 4);
+    REQUIRE_FALSE(simulator.step());
 }

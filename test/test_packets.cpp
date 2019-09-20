@@ -41,6 +41,13 @@ TEST_CASE("packet send & receive", "[packets]") {
     send(send_socket, testF);
     REQUIRE(receive<FloatT>(recv_socket).value == 12.0f);
 
+    struct __attribute__((packed)) float64 {
+        uint32_t id = 3 | (1 << 16);
+        double val = 12.0f;
+    } packet;
+    send(send_socket, packet);
+    REQUIRE(receive<FloatT>(recv_socket) == 12.0f);
+
     Vec3T testV;
     testV.value = {12.0f, 0.0f, -12.2e5f};
     send(send_socket, testV);
