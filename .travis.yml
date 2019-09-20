@@ -38,7 +38,7 @@ after_success:
 # Create lcov report
   - lcov --capture --directory . --output-file coverage.info
   - lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
-  - lcov --remove coverage.info "$TRAVIS_BUILD_DIR/test/catch/*"" --output-file coverage.info # filter catch
+  - lcov --remove coverage.info "$TRAVIS_BUILD_DIR/test/*"" --output-file coverage.info # filter catch
   - lcov --list coverage.info # debug info
 # Uploading report to CodeCov
   - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
