@@ -119,11 +119,14 @@ inline mat3 transpose(const mat3& m) {
 }
 
 inline mat3 operator*(const mat3& a, const mat3& b) {
-    return {vec3{dot(get_axis(b, 0), a[0]), dot(get_axis(b, 1), a[0]),
+    return {vec3{dot(get_axis(b, 0), a[0]),
+                 dot(get_axis(b, 1), a[0]),
                  dot(get_axis(b, 2), a[0])},
-            vec3{dot(get_axis(b, 0), a[1]), dot(get_axis(b, 1), a[1]),
+            vec3{dot(get_axis(b, 0), a[1]),
+                 dot(get_axis(b, 1), a[1]),
                  dot(get_axis(b, 2), a[1])},
-            vec3{dot(get_axis(b, 0), a[2]), dot(get_axis(b, 1), a[2]),
+            vec3{dot(get_axis(b, 0), a[2]),
+                 dot(get_axis(b, 1), a[2]),
                  dot(get_axis(b, 2), a[2])}};
 }
 

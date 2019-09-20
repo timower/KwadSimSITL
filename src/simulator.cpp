@@ -69,35 +69,35 @@ void Simulator::set_gyro(const StatePacket& state,
     vec3 gyro = xform_inv(basis, state.angularVelocity.value);
 
     vec3 accelerometer =
-        xform_inv(basis, acceleration) / init_packet.quad_mass.value;
+      xform_inv(basis, acceleration) / init_packet.quad_mass.value;
 
     int16_t x, y, z;
     if (bf::sensors(bf::SENSOR_ACC)) {
 #ifdef USE_QUAT_ORIENTATION
-        bf::imuSetAttitudeQuat(rotation[3], -rotation[2], rotation[0],
-                               -rotation[1]);
+        bf::imuSetAttitudeQuat(
+          rotation[3], -rotation[2], rotation[0], -rotation[1]);
 #else
         x = int16_t(
-            bf::constrain(int(-accelerometer[2] * ACC_SCALE), -32767, 32767));
+          bf::constrain(int(-accelerometer[2] * ACC_SCALE), -32767, 32767));
         y = int16_t(
-            bf::constrain(int(accelerometer[0] * ACC_SCALE), -32767, 32767));
+          bf::constrain(int(accelerometer[0] * ACC_SCALE), -32767, 32767));
         z = int16_t(
-            bf::constrain(int(-accelerometer[1] * ACC_SCALE), -32767, 32767));
+          bf::constrain(int(-accelerometer[1] * ACC_SCALE), -32767, 32767));
         bf::fakeAccSet(bf::fakeAccDev, x, y, z);
 #endif
     }
 
     x = int16_t(
-        bf::constrain(int(-gyro[2] * GYRO_SCALE * RAD2DEG), -32767, 32767));
+      bf::constrain(int(-gyro[2] * GYRO_SCALE * RAD2DEG), -32767, 32767));
     y = int16_t(
-        bf::constrain(int(-gyro[0] * GYRO_SCALE * RAD2DEG), -32767, 32767));
+      bf::constrain(int(-gyro[0] * GYRO_SCALE * RAD2DEG), -32767, 32767));
     z = int16_t(
-        bf::constrain(int(gyro[1] * GYRO_SCALE * RAD2DEG), -32767, 32767));
+      bf::constrain(int(gyro[1] * GYRO_SCALE * RAD2DEG), -32767, 32767));
     bf::fakeGyroSet(bf::fakeGyroDev, x, y, z);
 
     const auto
-        DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS =
-            1.113195f;
+      DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS =
+        1.113195f;
     const auto cosLon0 = 0.63141842418f;
 
     // set gps:
@@ -108,19 +108,19 @@ void Simulator::set_gyro(const StatePacket& state,
         bf::EnableState(bf::GPS_FIX);
         bf::gpsSol.numSat = 10;
         bf::gpsSol.llh.lat =
-            int32_t(
-                -pos[2] * 100 /
-                DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS) +
-            508445910;
+          int32_t(
+            -pos[2] * 100 /
+            DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS) +
+          508445910;
         bf::gpsSol.llh.lon =
-            int32_t(
-                pos[0] * 100 /
-                (cosLon0 *
-                 DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS)) +
-            43551050;
+          int32_t(
+            pos[0] * 100 /
+            (cosLon0 *
+             DISTANCE_BETWEEN_TWO_LONGITUDE_POINTS_AT_EQUATOR_IN_HUNDREDS_OF_KILOMETERS)) +
+          43551050;
         bf::gpsSol.llh.altCm = int32_t(pos[1] * 100);
         bf::gpsSol.groundSpeed =
-            uint16_t(length(state.linearVelocity.value) * 100);
+          uint16_t(length(state.linearVelocity.value) * 100);
         bf::GPS_update |= bf::GPS_MSP_UPDATE;
 
         last_millis = millis;
@@ -129,7 +129,7 @@ void Simulator::set_gyro(const StatePacket& state,
 
 float Simulator::motor_torque(float volts, float rpm) {
     auto current =
-        (volts - rpm / init_packet.motor_kv.value) / init_packet.motor_R.value;
+      (volts - rpm / init_packet.motor_kv.value) / init_packet.motor_R.value;
 
     if (current > 0)
         current = std::max(0.0f, current - init_packet.motor_I0.value);
@@ -159,7 +159,8 @@ float Simulator::prop_torque(float rpm, float vel) {
     return prop_thrust(rpm, vel) * init_packet.prop_torque_factor.value;
 }
 
-float Simulator::calculate_motors(float dt, const StatePacket& state,
+float Simulator::calculate_motors(float dt,
+                                  const StatePacket& state,
                                   std::array<MotorState, 4>& motors) {
     using namespace vmath;
 
@@ -177,7 +178,7 @@ float Simulator::calculate_motors(float dt, const StatePacket& state,
         auto rpm = motors[i].rpm;
 
         const auto volts =
-            bf::motorsPwm[i] / 1000.0f * init_packet.quad_vbat.value;
+          bf::motorsPwm[i] / 1000.0f * init_packet.quad_vbat.value;
         const auto torque = motor_torque(volts, rpm);
 
         const auto ptorque = prop_torque(rpm, vel);
@@ -200,14 +201,16 @@ float Simulator::calculate_motors(float dt, const StatePacket& state,
 void Simulator::update_rotation(float dt, StatePacket& state) {
     using namespace vmath;
     const auto w = state.angularVelocity.value * dt;
-    const mat3 W = {vec3{1, -w[2], w[1]}, vec3{w[2], 1, -w[0]},
-                    vec3{-w[1], w[0], 1}};
+    const mat3 W = {
+      vec3{1, -w[2], w[1]}, vec3{w[2], 1, -w[0]}, vec3{-w[1], w[0], 1}};
     state.rotation.value = W * state.rotation.value;
 }
 
 vmath::vec3 Simulator::calculate_physics(
-    float dt, StatePacket& state, const std::array<MotorState, 4>& motors,
-    float motorsTorque) {
+  float dt,
+  StatePacket& state,
+  const std::array<MotorState, 4>& motors,
+  float motorsTorque) {
     using namespace vmath;
     vec3 acceleration;
 
@@ -222,8 +225,7 @@ vmath::vec3 Simulator::calculate_physics(
     auto local_dir = xform_inv(state.rotation.value, dir);
     float area = dot(init_packet.frame_drag_area.value, abs(local_dir));
     total_force = total_force - dir * 0.5 * AIR_RHO * vel2 *
-                                    init_packet.frame_drag_constant.value *
-                                    area;
+                                  init_packet.frame_drag_constant.value * area;
 
     // motors:
     for (auto i = 0u; i < 4; i++) {
@@ -246,10 +248,11 @@ vmath::vec3 Simulator::calculate_physics(
     }
 
     vec3 inv_inertia = init_packet.quad_inv_inertia.value;
-    mat3 inv_tensor = {vec3{inv_inertia[0], 0, 0}, vec3{0, inv_inertia[1], 0},
+    mat3 inv_tensor = {vec3{inv_inertia[0], 0, 0},
+                       vec3{0, inv_inertia[1], 0},
                        vec3{0, 0, inv_inertia[2]}};
     inv_tensor =
-        state.rotation.value * inv_tensor * transpose(state.rotation.value);
+      state.rotation.value * inv_tensor * transpose(state.rotation.value);
     vec3 angularAcc = xform(inv_tensor, total_moment);
     assert(std::isfinite(angularAcc[0]) && std::isfinite(angularAcc[1]) &&
            std::isfinite(angularAcc[2]));

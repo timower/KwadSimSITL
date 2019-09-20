@@ -20,8 +20,8 @@ auto to_ms(std::chrono::duration<R, P> t) {
 
 void clearline() {
     fmt::print(
-        "\r                                                                    "
-        "                          \r");
+      "\r                                                                    "
+      "                          \r");
 }
 
 int main() {
@@ -38,8 +38,10 @@ int main() {
             long long delta = simulator.micros_passed - ms_i;
 
             clearline();
-            fmt::print("elapsed ms: {}, fake ms: {}, delta: {}", ms_i,
-                       simulator.micros_passed, delta);
+            fmt::print("elapsed ms: {}, fake ms: {}, delta: {}",
+                       ms_i,
+                       simulator.micros_passed,
+                       delta);
         }
 
         i++;

@@ -1,5 +1,10 @@
 BasedOnStyle: Google
 IndentWidth: 4
+ContinuationIndentWidth: 2
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+BinPackArguments: false
+AlignAfterOpenBracket: Align
 AllowShortBlocksOnASingleLine: false
 AllowShortFunctionsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false

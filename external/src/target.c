@@ -53,6 +53,10 @@ const timerHardware_t timerHardware[1];  // unused
 #include "rx/rx.h"
 
 #include "drivers/display.h"
+
+#ifdef _WIN32
+#include "winsock2.h"
+#endif
 #include "dyad.h"
 
 #include "fc/runtime_config.h"
@@ -124,23 +128,30 @@ void FLASH_Unlock(void) {
         size_t n = fread(eepromData, 1, sizeof(eepromData), eepromFd);
         if (n == lSize) {
             printf("[FLASH_Unlock] loaded '%s', size = %ld / %ld\n",
-                   EEPROM_FILENAME, lSize, sizeof(eepromData));
+                   EEPROM_FILENAME,
+                   lSize,
+                   sizeof(eepromData));
         } else {
-            fprintf(stderr, "[FLASH_Unlock] failed to load '%s, %ld < %ld'\n",
-                    EEPROM_FILENAME, n, lSize);
+            fprintf(stderr,
+                    "[FLASH_Unlock] failed to load '%s, %ld < %ld'\n",
+                    EEPROM_FILENAME,
+                    n,
+                    lSize);
             return;
         }
     } else {
-        printf("[FLASH_Unlock] created '%s', size = %ld\n", EEPROM_FILENAME,
+        printf("[FLASH_Unlock] created '%s', size = %ld\n",
+               EEPROM_FILENAME,
                sizeof(eepromData));
         if ((eepromFd = fopen(EEPROM_FILENAME, "wb+")) == NULL) {
-            fprintf(stderr, "[FLASH_Unlock] failed to create '%s'\n",
+            fprintf(stderr,
+                    "[FLASH_Unlock] failed to create '%s'\n",
                     EEPROM_FILENAME);
             return;
         }
         if (fwrite(eepromData, sizeof(eepromData), 1, eepromFd) != 1) {
-            fprintf(stderr, "[FLASH_Unlock] write failed: %s\n",
-                    strerror(errno));
+            fprintf(
+              stderr, "[FLASH_Unlock] write failed: %s\n", strerror(errno));
         }
     }
 }
@@ -168,8 +179,8 @@ FLASH_Status FLASH_ProgramWord(uintptr_t addr, uint32_t value) {
     if ((addr >= (uintptr_t)eepromData) &&
         (addr < (uintptr_t)ARRAYEND(eepromData))) {
         *((uint32_t *)addr) = value;
-        printf("[FLASH_ProgramWord]%p = %08x\n", (void *)addr,
-               *((uint32_t *)addr));
+        printf(
+          "[FLASH_ProgramWord]%p = %08x\n", (void *)addr, *((uint32_t *)addr));
     } else {
         printf("[FLASH_ProgramWord]%p out of range!\n", (void *)addr);
     }
@@ -183,8 +194,10 @@ void uartPinConfigure(const serialPinConfig_t *pSerialPinConfig) {
     printf("uartPinConfigure\n");
 }
 
-PG_REGISTER_WITH_RESET_FN(serialPinConfig_t, serialPinConfig,
-                          PG_SERIAL_PIN_CONFIG, 0);
+PG_REGISTER_WITH_RESET_FN(serialPinConfig_t,
+                          serialPinConfig,
+                          PG_SERIAL_PIN_CONFIG,
+                          0);
 
 void pgResetFn_serialPinConfig(serialPinConfig_t *serialPinConfig) {
     printf("Serial reset\n");
@@ -221,11 +234,13 @@ int spiDeviceByInstance(void *instance) {
 void max7456WriteNvm(uint8_t char_address, const uint8_t *font_data) {
 }
 
-PG_REGISTER_WITH_RESET_FN(displayPortProfile_t, displayPortProfileMax7456,
-                          PG_DISPLAY_PORT_MAX7456_CONFIG, 0);
+PG_REGISTER_WITH_RESET_FN(displayPortProfile_t,
+                          displayPortProfileMax7456,
+                          PG_DISPLAY_PORT_MAX7456_CONFIG,
+                          0);
 
 void pgResetFn_displayPortProfileMax7456(
-    displayPortProfile_t *displayPortProfile) {
+  displayPortProfile_t *displayPortProfile) {
     displayPortProfile->colAdjust = 0;
     displayPortProfile->rowAdjust = 0;
 
@@ -256,8 +271,11 @@ void GPS_calculateDistanceFlownVerticalSpeed_Fake(bool initialize) {
                 GPS_DISTANCE_FLOWN_MIN_GROUND_SPEED_THRESHOLD_CM_S) {
                 uint32_t dist;
                 int32_t dir;
-                GPS_distance_cm_bearing(&gpsSol.llh.lat, &gpsSol.llh.lon,
-                                        &lastCoord[LAT], &lastCoord[LON], &dist,
+                GPS_distance_cm_bearing(&gpsSol.llh.lat,
+                                        &gpsSol.llh.lon,
+                                        &lastCoord[LAT],
+                                        &lastCoord[LON],
+                                        &dist,
                                         &dir);
                 GPS_distanceFlownInCm += dist;
             }
@@ -265,9 +283,9 @@ void GPS_calculateDistanceFlownVerticalSpeed_Fake(bool initialize) {
 
         int32_t dt = currentMillis - lastMillis;
         GPS_verticalSpeedInCmS =
-            dt == 0 ? 0 : (gpsSol.llh.altCm - lastAlt) * 1000 / dt;
+          dt == 0 ? 0 : (gpsSol.llh.altCm - lastAlt) * 1000 / dt;
         GPS_verticalSpeedInCmS =
-            constrain(GPS_verticalSpeedInCmS, -1500.0f, 1500.0f);
+          constrain(GPS_verticalSpeedInCmS, -1500.0f, 1500.0f);
     }
     lastCoord[LON] = gpsSol.llh.lon;
     lastCoord[LAT] = gpsSol.llh.lat;

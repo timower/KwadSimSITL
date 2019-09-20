@@ -35,10 +35,12 @@ class Simulator {
    protected:
     void set_gyro(const StatePacket& state, const vmath::vec3& acceleration);
 
-    float calculate_motors(float dt, const StatePacket& state,
+    float calculate_motors(float dt,
+                           const StatePacket& state,
                            std::array<MotorState, 4>& motors);
 
-    vmath::vec3 calculate_physics(float dt, StatePacket& state,
+    vmath::vec3 calculate_physics(float dt,
+                                  StatePacket& state,
                                   const std::array<MotorState, 4>& motors,
                                   float motorsTorque);
 

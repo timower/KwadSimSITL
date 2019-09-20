@@ -20,10 +20,13 @@
 
 #pragma once
 
+#ifdef _WIN32
+#include "winsock2.h"
+#endif
 #include "dyad.h"
 
-#define RX_BUFFER_SIZE    1400
-#define TX_BUFFER_SIZE    1400
+#define RX_BUFFER_SIZE 1400
+#define TX_BUFFER_SIZE 1400
 
 typedef struct {
     serialPort_t port;
@@ -38,12 +41,17 @@ typedef struct {
     uint8_t id;
 } tcpPort_t;
 
-serialPort_t *serTcpOpen(int id, serialReceiveCallbackPtr rxCallback, void *rxCallbackData, uint32_t baudRate, portMode_e mode, portOptions_e options);
+serialPort_t *serTcpOpen(int id,
+                         serialReceiveCallbackPtr rxCallback,
+                         void *rxCallbackData,
+                         uint32_t baudRate,
+                         portMode_e mode,
+                         portOptions_e options);
 
 // tcpPort API
-void tcpDataIn(tcpPort_t *instance, uint8_t* ch, int size);
+void tcpDataIn(tcpPort_t *instance, uint8_t *ch, int size);
 void tcpDataOut(tcpPort_t *instance);
 
 bool tcpIsStart(void);
-bool* tcpGetUsed(void);
-tcpPort_t* tcpGetPool(void);
+bool *tcpGetUsed(void);
+tcpPort_t *tcpGetPool(void);

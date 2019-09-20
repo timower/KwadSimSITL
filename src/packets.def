@@ -1,3 +1,4 @@
+// clang-format off
 PACKET(InitPacket, 14)
     FIELD(FloatT, motor_kv)
     FIELD(FloatT, motor_R)
@@ -39,3 +40,4 @@ PACKET(StateOsdUpdatePacket, 3)
     FIELD(Vec3T, linearVelocity)
     FIELD(S(PoolByteArrayT<16 * 30>), osd)
 END_PACKET()
+// clang-format on
