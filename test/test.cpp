@@ -5,6 +5,8 @@
 
 #include <kissnet.hpp>
 
+#include <thread>
+
 namespace kn = kissnet;
 
 namespace {
@@ -72,6 +74,39 @@ TEST_CASE("Simulator init", "[simulator]") {
     REQUIRE(update.linearVelocity.value[1] < 0);
     REQUIRE(update.linearVelocity.value[2] == 0);
 
+    std::thread serial_thread([]() {
+        kn::tcp_socket socket(kn::endpoint("127.0.0.1", 5761));
+        REQUIRE(socket.connect());
+
+        std::array<char, 6> p = {'$', 'M', '<', 0, 1, 1};
+        auto [len, no_error] =
+          socket.send(reinterpret_cast<std::byte*>(&p[0]), 6);
+
+        REQUIRE(no_error);
+        REQUIRE(len == 6);
+
+        std::array<std::byte, 1024> buffer;
+        std::cout << "receiving..." << std::endl;
+        auto [len2, no_error2] = socket.recv(buffer);
+        REQUIRE(no_error2);
+        REQUIRE(len2 == 9);
+
+        socket.close();
+    });
+
+    for (int i = 0; i <= 100; i++) {
+        state.delta = 0.01f;
+        send(send_socket, state);
+        REQUIRE(simulator.step());
+        receive<StateOsdUpdatePacket, false, true>(recv_socket);
+    }
+
+    std::cout << "done running.." << std::endl;
+
+    REQUIRE(simulator.micros_passed / 1000000 == 2);
+
     send_socket.send(reinterpret_cast<const std::byte*>("STOP"), 4);
     REQUIRE_FALSE(simulator.step());
+
+    serial_thread.join();
 }
