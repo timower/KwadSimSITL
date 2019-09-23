@@ -7,6 +7,7 @@ if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     cmake ..
     cmake --build .
     test/unit_tests
+    mv build/kwadSimServer build/kwadSimServer.osx
 else
     # TODO: mingw windows build
     mkdir build

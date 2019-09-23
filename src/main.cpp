@@ -47,5 +47,7 @@ int main() {
         i++;
     }
 
+    fmt::print("Stopped server\n");
+
     return 0;
 }
