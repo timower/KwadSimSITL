@@ -50,7 +50,7 @@ deploy:
     api_key:
       secure: rqQ69NLq39ojie9ZsO59oAh59a9HYvgw0SVD3Zx6M+lb+Lsg1J5xooYrrAlO0kNc+tCTlEbOyXzgEozU8OYzOVzH91ZOPpgoiL2S3y73Q4KWil/O0LRyTSZZW090FoAPCD1D/6nMh6MHPsGxXOSA2DgGzAyONNrVvGxZoGeJ5KYHaZwh9XTDCQA3aUukSlgwkJcWB/odkJLXA43S+FrvjLJejJTn9gj60cbVQd5bAKaR4lBbN0q+LhEkONlViyU1vAhcm8mX6d1JyCngdmG0L9LxNJTt4L4SBfOAgOEF/9U1glny5Xu14B0ubJpluH7ySV1CaYGB3+PJKwulVCxhY94CTmMGMAERmZXKdp8M4ky2l8TjcORi8YgztYlWa5Co7x94Jvge5meqfJWagEjrMN37qnI5VO1yjc6NBuuFfzWnHUGyWP6+csJJ8JgG2acLsZv1k+O//zp4FtIxXtV42lBXOFvKdGL3ZqqcrO2mrpUiiLGbCcIr4QrmNgMkSO0ImbevH3YpXk55PCL5wkxzTHcJam3eC11ou/cxisw0MvcU/1qkcQcd1FU/a4YBFgmfMleUhmoxKgN9hHKyS+ds0bhY8l5N0CFgSeN6P7s06882FjwjJCX/6oLhlFLugsePecamchfxhT85OhRYqa7D7o6ZqiQnRHZko+/X7lN0kKM=
     file: 
-     - "build/kwadSimServer.x11"
+     - "build_rel/kwadSimServer.x11"
      - "build_win/kwadSimServer.exe"
     on:
       condition: $TRAVIS_OS_NAME = linux
