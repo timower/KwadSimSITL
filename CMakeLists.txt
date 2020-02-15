@@ -3,6 +3,8 @@ project(KwadSimServer)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(GEN_COVERAGE "Generate coverage profile" OFF)
+
 # Linker options for betaflight and windows
 if (NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T${CMAKE_SOURCE_DIR}/external/betaflight/src/main/target/SITL/pg.ld")
@@ -13,16 +15,18 @@ if (WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
-
+if (GEN_COVERAGE)
+  message("Building with coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+endif ()
 
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
 
 # Get betaflight sources:
 add_subdirectory(external/)
 
-set(SOURCE_FILES 
+set(SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/simulator.cpp)
 
 add_library(libsim OBJECT ${BETAFLIGHT_SOURCES} ${SOURCE_FILES})
@@ -45,7 +49,7 @@ target_include_directories(libsim PUBLIC external/kissnet)
 
 target_link_libraries(libsim PUBLIC fmt-header-only)
 
-add_executable(kwadSimServer 
+add_executable(kwadSimServer
     src/main.cpp $<TARGET_OBJECTS:libsim>) # ${SOURCE_FILES}) #${BETAFLIGHT_SOURCES})
 
 target_link_libraries(kwadSimServer PUBLIC libsim)

@@ -56,6 +56,13 @@ TEST_CASE("packet send & receive", "[packets]") {
     REQUIRE(recvV[1] == 0.0f);
     REQUIRE(recvV[2] == -12.2e5f);
 
+    BasisT basis;
+    basis.value[0][2] = 44.2f;
+    send(send_socket, basis);
+    auto recvB =  receive<BasisT>(recv_socket).value;
+    REQUIRE(recvB[0][2] == 44.2f);
+
+
     InitPacket initpacket;
     initpacket.motor_I0.value = 2.3f;
     send(send_socket, initpacket);

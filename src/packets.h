@@ -98,11 +98,13 @@ struct FloatT : GodotT<3> {
         if (!GodotT::_parse(data, len)) return false;
 
         if (!is64) {
-            value = *reinterpret_cast<float*&>(data);
+            memcpy(&value, data, sizeof(float));
             return advance(data, len, sizeof(float));
         }
 
-        value = *reinterpret_cast<double*&>(data);
+        double tmp;
+        memcpy(&tmp, data, sizeof(double));
+        value = tmp;
         return advance(data, len, sizeof(double));
     }
 
@@ -123,8 +125,8 @@ struct Vec3T : public GodotT<7> {
     bool _parse(std::byte*& data, std::size_t& len) {
         if (!GodotT::_parse(data, len)) return false;
 
-        for (auto i = 0u; i < 3; i++) {
-            value[i] = *reinterpret_cast<float*&>(data);
+        for (auto i = 0u; i < 3u; i++) {
+            memcpy(&value[i], data, sizeof(float));
             if (!advance(data, len, sizeof(float))) return false;
         }
 
@@ -142,7 +144,7 @@ struct BasisT : public GodotT<12> {
 
         for (auto i = 0u; i < 3; i++) {
             for (auto j = 0u; j < 3; j++) {
-                value[i][j] = *reinterpret_cast<float*&>(data);
+                memcpy(&value[i][j], data, sizeof(float));
                 if (!advance(data, len, sizeof(float))) return false;
             }
         }
@@ -272,9 +274,6 @@ auto receive(kissnet::udp_socket& recv_socket)
             return std::nullopt;
         }
     }
-
-    // std::string str(reinterpret_cast<const char *>(&buf[0]), len);
-    // fmt::print("Got: {}\n", string_to_hex(str));
 
     const auto result = get<T>(&buf[0], len);
     if constexpr (AllowError) {
