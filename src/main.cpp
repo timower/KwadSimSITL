@@ -47,7 +47,7 @@ int main() {
         i++;
     }
 
-    fmt::print("Stopped server\n");
+    fmt::print("Stopped betaflight host process\n");
 
     return 0;
 }

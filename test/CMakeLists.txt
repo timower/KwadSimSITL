@@ -18,4 +18,4 @@ if (WIN32)
 endif (WIN32)
 
 enable_testing()
-add_test(NAME kwadSimServerTests COMMAND unit_tests)
+add_test(NAME kwadSimSITLTests COMMAND unit_tests)

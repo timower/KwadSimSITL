@@ -2,7 +2,7 @@ extends Object
 
 class_name Packets
 
-#define GEN # This file is generated from KwadSimServer/Packets.def, do not edit
+#define GEN # This file is generated from KwadSimSITL/Packets.def, do not edit
 GEN
 
 class Packet extends Object:

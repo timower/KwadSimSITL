@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.3)
-project(KwadSimServer)
+project(KwadSimSITL)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -49,13 +49,13 @@ target_include_directories(libsim PUBLIC external/kissnet)
 
 target_link_libraries(libsim PUBLIC fmt-header-only)
 
-add_executable(kwadSimServer
+add_executable(kwadSimSITL
     src/main.cpp $<TARGET_OBJECTS:libsim>) # ${SOURCE_FILES}) #${BETAFLIGHT_SOURCES})
 
-target_link_libraries(kwadSimServer PUBLIC libsim)
+target_link_libraries(kwadSimSITL PUBLIC libsim)
 
 if (WIN32)
-    target_link_libraries(kwadSimServer PUBLIC wsock32 ws2_32)
+  target_link_libraries(kwadSimSITL PUBLIC wsock32 ws2_32)
 endif (WIN32)
 
 add_subdirectory(test)
